@@ -34,11 +34,3 @@ install it with the command-line tool [cv](https://github.com/civicrm/cv).
 git clone https://github.com/FIXME/uk.co.mountev.membersig.git
 cv en membersig
 ```
-
-## Usage
-
-(* FIXME: Where would a new user navigate to get started? What changes would they see? *)
-
-## Known Issues
-
-(* FIXME *)
