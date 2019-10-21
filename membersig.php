@@ -192,7 +192,10 @@ function membersig_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   // where membership is not attached to a contribution. And contribution is for purchasing
   // extra SIG
   if (($op == 'create' OR $op == 'edit') AND $objectName == 'Contribution' ) {
-    if (in_array($objectRef->contribution_page_id, MS::PURCHASE_EXTRA_SIG_PAGE_IDS)) {
+    $completedContributionStatusId = CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'contribution_status_id', 'Completed');
+    if (($objectRef->contribution_status_id == $completedContributionStatusId) && 
+      in_array($objectRef->contribution_page_id, MS::PURCHASE_EXTRA_SIG_PAGE_IDS)
+    ) {
       $result = civicrm_api3('Membership', 'get', [
         'sequential' => 1,
         'contact_id' => $objectRef->contact_id ? $objectRef->contact_id : 0,

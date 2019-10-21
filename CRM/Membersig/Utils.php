@@ -3,7 +3,7 @@
 class CRM_Membersig_Utils {
 
   const CG_MEMBER_SIG_ACCESS_DATES = "Member_SIG_Access_Dates";
-  const PURCHASE_EXTRA_SIG_PAGE_IDS = [8];
+  const PURCHASE_EXTRA_SIG_PAGE_IDS = [8,11];
 
   public static function getContributionId($membershipId) {
     $query = "SELECT MAX(contribution_id) FROM civicrm_membership_payment WHERE membership_id = %1";
