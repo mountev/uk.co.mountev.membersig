@@ -192,23 +192,46 @@ function membersig_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   // where membership is not attached to a contribution. And contribution is for purchasing
   // extra SIG
   if (($op == 'create' OR $op == 'edit') AND $objectName == 'Contribution' ) {
-    if (in_array($objectRef->contribution_page_id, MS::PURCHASE_EXTRA_SIG_PAGE_IDS)) {
-      $statuses = [];
-      $statuses[] = CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'contribution_status_id', 'Completed');
-      $statuses[] = CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'contribution_status_id', 'Partially paid');
-      if (in_array($objectRef->contribution_status_id, $statuses)) {
-        $result = civicrm_api3('Membership', 'get', [
-          'sequential' => 1,
-          'contact_id' => $objectRef->contact_id ? $objectRef->contact_id : 0,
-        ]);
-        if (!empty($result['values'])) {
-          foreach ($result['values'] as $mem) {
-            if (in_array($mem['membership_type_id'], MS::getMembershipTypes($mem['id']))) {
-              MS::updateAccessDates($objectId, $mem['id'], $mem['end_date']);
-            }
+    _membersig_civicrm_extra_sig_purchase($objectRef->contact_id, $objectId, $objectRef->contribution_status_id, $objectRef->contribution_page_id);
+  }
+}
+
+function _membersig_civicrm_extra_sig_purchase($contactId, $contributionId, $contributionStatusId, $contributionPageId) {
+  if (in_array($contributionPageId, MS::PURCHASE_EXTRA_SIG_PAGE_IDS)) {
+    $statusCompleted = CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'contribution_status_id', 'Completed');
+    if ($contributionStatusId == $statusCompleted) {
+      $result = civicrm_api3('Membership', 'get', [
+        'sequential' => 1,
+        'contact_id' => $contactId ? $contactId : 0,
+      ]);
+      if (!empty($result['values'])) {
+        foreach ($result['values'] as $mem) {
+          if (in_array($mem['membership_type_id'], MS::getMembershipTypes($mem['id']))) {
+            MS::updateAccessDates($contributionId, $mem['id'], $mem['end_date']);
           }
         }
       }
+    }
+  }
+}
+
+/**
+ * Implements hook_civicrm_postProcess().
+ *
+ * @param string $formName
+ * @param CRM_Core_Form $form
+ */
+function membersig_civicrm_postProcess($formName, &$form) {
+  // AdditionalPayment form invokes contribution pre/post hook with status as Partially Paid.
+  // Even though later it completes it when amount matches to total.
+  // As a workwound we use postprocess hook to check the final status of contribution and trigger
+  // sig_purchase functionality.
+  if ($formName == 'CRM_Contribute_Form_AdditionalPayment') {
+    $contributionId = $form->getVar('_contributionId');
+    $dao = new CRM_Contribute_DAO_Contribution();
+    $dao->id = $contributionId;
+    if ($dao->find(TRUE)) {
+      _membersig_civicrm_extra_sig_purchase($dao->contact_id, $dao->id, $dao->contribution_status_id, $dao->contribution_page_id);
     }
   }
 }
