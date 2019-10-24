@@ -151,7 +151,8 @@ function membersig_civicrm_themes(&$themes) {
  *
 function membersig_civicrm_preProcess($formName, &$form) {
 
-} // */
+} // 
+*/
 
 /**
  * Implements hook_civicrm_navigationMenu().
@@ -168,7 +169,8 @@ function membersig_civicrm_navigationMenu(&$menu) {
     'separator' => 0,
   ));
   _membersig_civix_navigationMenu($menu);
-} // */
+} // 
+*/
 
 function membersig_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   // where membership is attached to a contribution
