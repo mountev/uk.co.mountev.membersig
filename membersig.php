@@ -194,12 +194,20 @@ function membersig_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   // where membership is not attached to a contribution. And contribution is for purchasing
   // extra SIG
   if (($op == 'create' OR $op == 'edit') AND $objectName == 'Contribution' ) {
+    // for cases where object ref doesn't have expected value - e.g direct payment workflow
+    if (empty($objectRef->contribution_page_id) && $objectId) {
+      $objectRef->contribution_page_id = CRM_Core_DAO::getFieldValue('CRM_Contribute_DAO_Contribution', $objectId, 'contribution_page_id');
+    }
+    if (empty($objectRef->contact_id) && $objectId) {
+      $objectRef->contact_id = CRM_Core_DAO::getFieldValue('CRM_Contribute_DAO_Contribution', $objectId, 'contact_id');
+    }
     _membersig_civicrm_extra_sig_purchase($objectRef->contact_id, $objectId, $objectRef->contribution_status_id, $objectRef->contribution_page_id);
   }
 }
 
 function _membersig_civicrm_extra_sig_purchase($contactId, $contributionId, $contributionStatusId, $contributionPageId) {
   if (in_array($contributionPageId, MS::PURCHASE_EXTRA_SIG_PAGE_IDS)) {
+    CRM_Core_Error::debug_log_message("SIG PURCHASE PROCESS INVOKED for CID: $contactId, COID: $contributionId, COSID: $contributionStatusId, COPID: $contributionPageId");
     $statusCompleted = CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'contribution_status_id', 'Completed');
     if ($contributionStatusId == $statusCompleted) {
       $result = civicrm_api3('Membership', 'get', [
@@ -214,6 +222,8 @@ function _membersig_civicrm_extra_sig_purchase($contactId, $contributionId, $con
         }
       }
     }
+  } else {
+    CRM_Core_Error::debug_log_message("SIG PURCHASE PROCESS BYPASSED for CID: $contactId, COID: $contributionId, COSID: $contributionStatusId, COPID: $contributionPageId");
   }
 }
 

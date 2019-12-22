@@ -68,11 +68,13 @@ class CRM_Membersig_Utils {
 
   public static function updateAccessDates($contributionId, $membershipId, $date) {
     $cfids = self::getAccessDateFieldsRelatedToLineItemFTs($contributionId);
+    CRM_Core_Error::debug_var('SIG $cfids', $cfids);
     foreach ($cfids as $cfid) {
       $params = [
         'entity_id' => $membershipId,
         "custom_{$cfid}" => CRM_Utils_Date::customFormat($date, '%Y%m%d'),
       ];
+      CRM_Core_Error::debug_var('SIG update membership access date $params', $params);
       civicrm_api3('CustomValue', 'create', $params);
     }
   }
